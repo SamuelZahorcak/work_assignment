@@ -1,0 +1,32 @@
+services:
+  fsm_app:
+    image: samuelzahorcak/fsm_app
+    volumes:
+      - fsm-data:/data
+    depends_on:
+      - redis
+      - redis-seeder
+
+  redis:
+    image: redis/redis-stack
+    container_name: redis-db
+    ports:
+      - "6379:6379"
+      - "8001:8001"
+    volumes:
+      - ./redis-volume:/data/redis
+    environment:
+      - REDIS_ARGS=--appendonly yes
+
+  redis-seeder:
+    image: redis/redis-stack
+    container_name: redis-seeder
+    command: >
+          redis-cli -h redis-db -p 6379 HSET device frequency 100 duration_50mHz 2 duration_100mHz 2 duration_recovery 6
+          && redis-cli -h redis-db -p 6379 HSET current_state state_number
+    depends_on:
+      - redis
+
+volumes:
+  fsm-data:
+  redis-volume:
